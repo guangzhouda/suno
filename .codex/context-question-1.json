@@ -1,0 +1,29 @@
+{
+  "id": "Q1",
+  "question": "灵感成歌/完整创作的 Suno 任务如何查询并返回可播放音频？",
+  "focus": "确认任务状态与音频URL在前端/后端的字段匹配情况，以及是否存在未实现的 Suno 调用。",
+  "evidence": [
+    {
+      "path": "templates/creative_ui_v2.html:424-520",
+      "snippet": "checkTaskStatus 调用 /api/suno/task/{taskId} 后仅在 data.data.status === 'complete' 时将任务标记为 completed，并假设 data.data.data 为包含 audio_url 的数组。"
+    },
+    {
+      "path": "modules/routes/suno.py:68-138",
+      "snippet": "get_task_status 返回 SunoClient.get_music_info 的 result，该 result 是 Suno API data 字段（包含 response.sunoData 列表、status=SUCCESS），并不会转换为 status='complete' 或 data=[...]。"
+    },
+    {
+      "path": "modules/clients/suno.py:114-146",
+      "snippet": "get_music_info 直接返回 res['data']，其中 status 文本示例见 docs/suno-API-docs/Get Music Generation Details.md，字段为 status: SUCCESS, response: { sunoData: [...] }。"
+    },
+    {
+      "path": "docs/suno-API-docs/Get Music Generation Details.md:223-248",
+      "snippet": "官方示例显示响应结构为 data.response.sunoData[].audioUrl，status=SUCCESS，而不是前端假设的 data.data.data[].audio_url。"
+    },
+    {
+      "path": "modules/routes/music_workflow.py:155-209",
+      "snippet": "call_suno_generate_music 仍返回 mock 数据（"Suno API 调用功能待实现"），导致 /api/music-workflow/create 无法真正提交 Suno 任务。"
+    }
+  ],
+  "analysis": "前端任务轮询逻辑 hardcode 了 status === 'complete' 和 data.data.data 结构，因此即便 Suno 已完成（status: SUCCESS）也不会触发任务完成，也拿不到音频URL；任务列表中 music.data 为空导致播放器无法播放。与此同时，music_workflow API 中用于模板创作的 Suno 调用尚未实现，直接返回 mock task_id，更进一步导致音乐无法生成。",
+  "implication": "需要同步调整 /api/suno/task 响应或前端解析逻辑：将 status 映射为 'SUCCESS'/'ERROR' 并从 response.sunoData 转换为 {audio_url,...}；同时补齐 call_suno_generate_music 以便模板工作流能够提交真实 Suno 任务。"
+}

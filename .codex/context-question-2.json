@@ -1,0 +1,21 @@
+{
+  "id": "Q2",
+  "question": "图片成歌流程中 Doubao 图像理解/歌词生成是否返回期望 JSON？上传图片时报错的根因是什么？",
+  "evidence": [
+    {
+      "path": "templates/creative_ui_v2.html:725-796",
+      "snippet": "handleImageToSong 如果选择文件则直接将整份 FormData POST 到 /api/creative/image-to-song（Content-Type: multipart/form-data）。"
+    },
+    {
+      "path": "modules/routes/creative_workflow.py:181-236",
+      "snippet": "后端 create_image_to_song 接受 Pydantic ImageToSongRequest（字段仅 image_url、additional_prompt、auto_generate、model），未声明 UploadFile/文件字段。"
+    },
+    {
+      "path": "modules/clients/doubao.py:120-210",
+      "snippet": "DoubaoClient.image_to_song_description 只能处理远程 image_url，通过 Vision 模型返回 JSON，再由 generate_lyrics 使用文本。
+      "
+    }
+  ],
+  "analysis": "当用户上传本地图片时，前端发送 multipart/form-data，而 FastAPI 端点期望 application/json；Pydantic 无法解析导致 422/500 报错。后端也没有逻辑将上传的图片保存到文件服务器或转换成 URL，因此 Doubao 客户端无法解析本地文件。若用户仅填入 image_url，流程可以执行，但 UI 没有提示或自动上传。",
+  "implication": "需要新增文件上传处理（保存临时文件并转换为 URL）或在前端禁用直接上传、强制输入 URL，同时明确 Doubao image_to_song_description 返回 JSON 结构（scene/emotion/style），以便 UI 不再报错。"
+}

@@ -1,0 +1,25 @@
+{
+  "id": "Q4",
+  "question": "图片成歌在上传图片时为何会直接“创作失败”？",
+  "focus": "确认 Doubao Vision 是否支持 data URI，以及后端在上传分支是否把文件转换为 Doubao 无法识别的格式。",
+  "evidence": [
+    {
+      "path": "templates/creative_ui_v2.html:706-745",
+      "snippet": "handleImageToSong 如果检测到 image_file，将 endpoint 切换到 /api/creative/image-to-song/upload，并以 FormData 方式上传 image_file；没有额外的文件托管逻辑。"
+    },
+    {
+      "path": "modules/routes/creative_workflow.py:40-65",
+      "snippet": "_encode_image_to_data_uri 直接 base64 编码上传内容并返回 data:{mime};base64,...，上传路由 create_image_to_song_from_upload 在读取文件后将 data_uri 传给 _run_image_to_song_workflow。"
+    },
+    {
+      "path": "modules/clients/doubao.py:206-270",
+      "snippet": "image_to_song_description → self.understand_image(image_url, question)，而 understand_image 调用豆包 chat.completions.create，content 列表包含 type=image_url, image_url={\"url\": image_url}，要求一个豆包可访问的 URL。"
+    },
+    {
+      "path": "docs/MUSIC_WORKFLOW_V2_DESIGN.md:74-100 & 276-285",
+      "snippet": "设计文档明确图片成歌流程需要先“文件上传 → 获得图片 URL”，并在关键决策记录中强调“图片成歌需要独立上传服务 —— 需要将图片上传到可访问的 URL，豆包 Vision API 需要图片 URL”。"
+    }
+  ],
+  "analysis": "上传分支把图片转换为 data URI 并直接喂给 Doubao Vision。豆包的图像理解接口与 OpenAI 格式相同，只接受公网 HTTP(S) URL（或平台上传后的 media_id），不支持 data URI。设计文档也提示必须上传到独立服务，但当前实现尚未完成，因此当用户“上传图片”时 Doubao 端口拿到 data:... 字符串后立即返回错误，前端显示创作失败。",
+  "implication": "需要实现真实的图片上传（本地或对象存储）并把可访问 URL 传给 Doubao，或使用 Doubao 官方上传 API。否则所有上传操作都会失败，只有输入外部 URL 的路径可以工作。"
+}

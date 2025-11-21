@@ -1,0 +1,24 @@
+{
+  "id": "Q3",
+  "question": "AI翻唱端点是否符合 docs/suno-API-docs 规范？",
+  "evidence": [
+    {
+      "path": "templates/creative_ui_v2.html:302-323",
+      "snippet": "AI翻唱表单只收集 file、target_style、new_title(可选)，未提供歌词(prompt)输入，new_title 也不是必填。handleCover 将 FormData 直接发送到 /api/creative/upload-cover。"
+    },
+    {
+      "path": "modules/routes/creative_workflow.py:238-305",
+      "snippet": "create_cover/upload_and_cover 均调用 SunoClient.upload_cover(customMode=True, instrumental=False, prompt=request.new_lyrics, style=request.target_style, title=request.new_title)。new_lyrics/new_title 定义为 Optional，缺少默认值或校验。"
+    },
+    {
+      "path": "modules/clients/suno.py:161-221",
+      "snippet": "SunoClient.upload_cover 在 customMode=True 时要求 style 和 title，而且若 instrumental=False 还要求 prompt，否则直接 raise ValueError('customMode=True ... 需要 prompt（歌词）')。"
+    },
+    {
+      "path": "docs/suno-API-docs/Upload And Cover Audio.md:110-151",
+      "snippet": "官方文档明确 customMode=true 时必须提供 title，且在 instrumental=false 时必须提供 prompt（歌词）。"
+    }
+  ],
+  "analysis": "前端既没有收集歌词，也把新标题设为可选；后端没有兜底逻辑，直接把 None 传给 SunoClient.upload_cover，触发 ValueError 然后被 FastAPI 捕获为 500，从而导致用户“点击开始创作报错”。即使用户勉强提供标题，也因为 prompt 缺失而失败。",
+  "implication": "需按 Suno 文档要求让翻唱表单收集歌词/新标题或在服务器端生成默认值，否则调用永远失败；此外可考虑使用 customMode=False 或 instrumental=True 作为临时兼容方案。"
+}

@@ -1,0 +1,42 @@
+# API Key 配置文件（敏感信息）
+config.json
+
+# 虚拟环境
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# PyInstaller 打包生成
+build/
+dist/
+*.spec.bak
+
+# 媒体输出文件
+suno_outputs/
+
+# IDE 配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 日志文件
+*.log
+
+# 测试文件
+.pytest_cache/
+.coverage
+htmlcov/

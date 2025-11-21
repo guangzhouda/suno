@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(timeout 3 bash:*)",
+      "Bash(set PORT=8001:*)",
+      "Bash(timeout 2 bash:*)",
+      "Bash(ping:*)",
+      "WebFetch(domain:docs.sunoapi.org)",
+      "mcp__puppeteer__puppeteer_navigate",
+      "Bash(cat:*)",
+      "Bash(dir:*)",
+      "Bash(powershell -Command \"if (Test-Path ''..\\suno\\.venv\\Scripts\\pip.exe'') { & ''..\\suno\\.venv\\Scripts\\pip.exe'' list --format=freeze } else { Write-Output ''虚拟环境不存在'' }\")",
+      "Bash(echo:*)",
+      "Bash(SunoWeb.spec)",
+      "Bash(powershell -Command \"New-Item -Path ''E:\\Projects\\PythonProject\\hooks'' -ItemType Directory -Force\")",
+      "Bash(powershell -Command:*)",
+      "Bash(.venvScriptspython.exe -m pip install --upgrade pip)",
+      "Bash(rm:*)",
+      "Bash(tree:*)",
+      "Bash(pip install:*)",
+      "mcp__puppeteer__puppeteer_screenshot",
+      "mcp__puppeteer__puppeteer_evaluate",
+      "Bash(curl:*)",
+      "Bash(findstr:*)",
+      "Bash(pip show:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)",
+      "Bash(test_docs.html)",
+      "Bash(nul)",
+      "Bash(timeout 5 bash:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

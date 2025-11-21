@@ -1,0 +1,25 @@
+{
+  "id": "Q5",
+  "question": "为什么“我的音乐任务”面板看不到任务进度或结束时间？",
+  "focus": "分析任务状态跟踪链路，确认是否有后端存储/轮询，如果没有则解释用户无法看到进度的原因。",
+  "evidence": [
+    {
+      "path": "templates/creative_ui_v2.html:404-520",
+      "snippet": "前端用 let activeTasks = new Map(); 仅在内存中保存任务。loadTasks() 遍历该 Map 渲染条目，没有任何 API 调用去同步已存在任务。"
+    },
+    {
+      "path": "templates/creative_ui_v2.html:500-545",
+      "snippet": "startPolling() 通过 setInterval 调用 checkTaskStatus(taskId)，前提是 activeTasks.size>0；checkTaskStatus 只是 fetch(`/api/suno/task/${taskId}`) 后更新 Map。页面刷新后 activeTasks 清空，轮询立即停止。"
+    },
+    {
+      "path": "templates/creative_ui_v2.html:718-760",
+      "snippet": "handleImageToSong 成功后才调用 addTask(taskId, ...)，如果豆包或 Suno 请求失败则不会进入 addTask，任务面板保持“暂无音乐任务”。"
+    },
+    {
+      "path": "modules/routes/creative_workflow.py:214-287",
+      "snippet": "后端 _run_image_to_song_workflow 返回 music_task_id 但没有任何持久化或任务记录接口，只依赖前端立即消费。"
+    }
+  ],
+  "analysis": "任务列表完全由浏览器内存维护，没有后端存储，也没有“查询全部任务”接口。上传图片失败或刷新页面后，activeTasks 清空，startPolling 条件不满足，用户自然看不到进度；即使任务已在 Suno 运行，也没有地方展示完成时间。用户等待两分钟看到的仍然是空白或“处理中”的条目，因此误以为后续没有继续查询。",
+  "implication": "若要让用户看到处理进度，需要构建后端任务表/缓存并提供查询接口，或至少持久化到 localStorage。否则必须告知用户页面刷新即丢失任务。"
+}

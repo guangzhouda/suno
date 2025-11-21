@@ -1,0 +1,22 @@
+# Operations Log
+- 2025-11-21T16:18+08:00 shell: 创建 .codex 目录并初始化 context 扫描流程。
+- 2025-11-21T16:20+08:00 shell: 阅读 modules/routes、modules/clients、config、docs 以整理 context-scan。code-index 工具在当前环境不可用，因此使用 rg/PowerShell 读取文件。
+- 2025-11-21T16:24+08:00 sequential-thinking: 输出 context 疑问列表至 .codex/context-questions.json。
+- 2025-11-21T16:32+08:00 deep-dive(Q1): 分析 creative_ui_v2 与 /api/suno/task 响应结构，记录于 .codex/context-question-1.json。
+- 2025-11-21T16:35+08:00 deep-dive(Q2): 排查 /api/creative/image-to-song 文件上传错误，结论写入 .codex/context-question-2.json。
+- 2025-11-21T16:38+08:00 deep-dive(Q3): 检查 AI 翻唱参数与 Suno 文档要求，记录至 .codex/context-question-3.json。
+- 2025-11-21T16:38+08:00 note: 已完成第3次深挖(Q3)，评估成本，若需更多信息再行处理。
+- 2025-11-21T16:40+08:00 sufficiency-check: 记录于 .codex/context-sufficiency.md。
+- 2025-11-21T16:43+08:00 coding: 完成 Task1 - 更新 modules/routes/suno.py、creative_ui_v2/enhanced 任务轮询并新增 normalize 测试，pip 安装 pytest 并追加到 requirements。
+- 2025-11-21T16:44+08:00 testing: 执行 python -m pytest test_suno_task_normalize.py，结果 2 通过，详见 .codex/testing.md。
+- 2025-11-21T16:55+08:00 testing: 运行 python -m pytest test_suno_task_normalize.py test_music_workflow_call_suno.py，结果 4 通过。
+- 2025-11-21T17:05+08:00 cleanup: 删除过期HTML demo文件（creative_ui/current_ui/test_ui/api_docs_test/simple_docs/test_docs），减少干扰。
+- 2025-11-21T17:35+08:00 ui: 将根路由改为直接返回 creative_ui_v2.html，确保主页展示灵感成歌等新功能。
+- 2025-11-21T17:47+08:00 cleanup: 删除 templates/index.html，强制主页回落到 creative_ui_v2，从根源避免老版本页面。
+- 2025-11-21T17:55+08:00 feat: 增强图片成歌支持文件上传 —— 后端新增 /api/creative/image-to-song/upload 并允许 data URI 传入 Doubao，前端 V2/增强版均按文件自动走新接口。执行 pytest 回归通过。
+- 2025-11-21T18:35+08:00 research: 更新 .codex/context-scan.json，聚焦图片成歌失败、任务轮询和积分刷新背景。
+- 2025-11-21T18:36+08:00 deep-dive: 记录 context-question-4/5，分别说明豆包拒绝 data URI 及任务面板仅靠前端 Map 的风险。
+- 2025-11-21T18:40+08:00 sufficiency-check: 更新 .codex/context-sufficiency.md，确认接口契约、技术方案与验证路径充分。
+- 2025-11-21T18:42+08:00 planning: 通过 shrimp plan/analyze/reflect/split 拆解 3 个任务（上传修复、任务刷新、积分按钮）。
+- 2025-11-21T18:50+08:00 coding: 实现 Task 1-3——后端上传改用 SunoClient.upload_stream 并返回公网 URL；creative_ui_v2 增加任务手动刷新/最近轮询与积分刷新按钮。
+- 2025-11-21T18:55+08:00 testing: 运行 `python -m pytest test_suno_task_normalize.py`，全部通过（警告同前），结果写入 .codex/testing.md。
