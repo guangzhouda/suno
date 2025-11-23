@@ -56,7 +56,7 @@ def _get_client(api_key: Optional[str] = None, base_url: Optional[str] = None) -
         config_file = pathlib.Path("config.json")
         if config_file.exists():
             try:
-                with open(config_file, encoding="utf-8") as f:
+                with open(config_file, encoding="utf-8-sig") as f:  # 兼容 BOM
                     config = json.load(f)
                     doubao_config = config.get("doubao", {})
 

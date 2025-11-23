@@ -1,0 +1,21 @@
+{
+  "task_id": "0271d1d52db8cf0ac3f817f8ac865a9e",
+  "title": "AI Song",
+  "style": "柔和，悲伤",
+  "tracks": [
+    {
+      "title": "废墟上的猫耳诗",
+      "audio_id": "8bcf9012-f078-44c3-88b2-5024fafc7868",
+      "audio_url": "https://musicfile.api.box/OGJjZjkwMTItZjA3OC00NGMzLTg4YjItNTAyNGZhZmM3ODY4.mp3",
+      "stream_audio_url": "https://musicfile.api.box/OGJjZjkwMTItZjA3OC00NGMzLTg4YjItNTAyNGZhZmM3ODY4",
+      "file": "downloads\\AI Song_0271d1d5\\01_废墟上的猫耳诗.mp3"
+    },
+    {
+      "title": "废墟上的猫耳诗",
+      "audio_id": "312df9c4-3c33-40a7-b1a0-2f563eff12da",
+      "audio_url": "https://musicfile.api.box/MzEyZGY5YzQtM2MzMy00MGE3LWIxYTAtMmY1NjNlZmYxMmRh.mp3",
+      "stream_audio_url": "https://musicfile.api.box/MzEyZGY5YzQtM2MzMy00MGE3LWIxYTAtMmY1NjNlZmYxMmRh",
+      "file": "downloads\\AI Song_0271d1d5\\02_废墟上的猫耳诗.mp3"
+    }
+  ]
+}

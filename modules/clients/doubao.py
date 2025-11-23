@@ -27,7 +27,7 @@ class DoubaoClient:
             config_file = pathlib.Path("config.json")
             if config_file.exists():
                 try:
-                    with open(config_file, encoding="utf-8") as f:
+                    with open(config_file, encoding="utf-8-sig") as f:  # 兼容 BOM
                         config = json.load(f)
                         doubao_config = config.get("doubao", {})
 
@@ -282,6 +282,93 @@ class DoubaoClient:
                 "tempo": "中速"
             }
 
+    def image_to_lyrics(
+        self,
+        image_url: str,
+        prompt: Optional[str] = None,
+        model: Optional[str] = None
+    ) -> Dict[str, str]:
+        """
+        图片生成歌词
+
+        Args:
+            image_url: 图片 URL
+            prompt: 额外要求/风格补充
+            model: 视觉模型 ID
+
+        Returns:
+            包含标题与歌词的字典
+        """
+        model = model or self.models.get("vision", "doubao-seed-1-6-vision-250815")
+
+        # 约束模型输出格式，优先要求 JSON，便于前端解析
+        user_text = """
+        请观看图片，直接写一首适合该画面的中文歌词，并给出简洁标题。
+        输出 JSON，不要包含多余解释：
+        {
+          "title": "歌曲标题",
+          "lyrics": "完整歌词，多段落可换行保留标签",
+          "description": "一句话概括画面与情绪"
+        }
+        """
+        if prompt:
+            user_text += f"\n补充要求：{prompt}"
+
+        try:
+            response = self.client.chat.completions.create(
+                model=model,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": image_url}
+                            },
+                            {
+                                "type": "text",
+                                "text": user_text
+                            }
+                        ]
+                    }
+                ]
+            )
+
+            content = response.choices[0].message.content.strip()
+
+            # 尝试解析 JSON，兼容代码块
+            json_str = content
+            if "```json" in content:
+                json_str = content.split("```json", 1)[1].split("```", 1)[0].strip()
+            elif "```" in content:
+                json_str = content.split("```", 1)[1].split("```", 1)[0].strip()
+
+            payload: Dict[str, str] = {}
+            try:
+                payload = json.loads(json_str)
+            except Exception:
+                # 如果不是 JSON，作为歌词文本返回
+                payload = {
+                    "lyrics": content,
+                    "title": "AI Song",
+                    "description": ""
+                }
+
+            # 兜底补全字段
+            lyrics = payload.get("lyrics") or payload.get("text") or payload.get("content") or content
+            title = payload.get("title") or "AI Song"
+            desc = payload.get("description") or payload.get("desc") or ""
+
+            return {
+                "title": title,
+                "lyrics": lyrics,
+                "description": desc,
+                "raw": content
+            }
+
+        except Exception as e:
+            raise RuntimeError(f"图片生成歌词失败: {e}")
+
     # ==================== 视频生成 ====================
 
     def generate_video(
@@ -370,3 +457,20 @@ class DoubaoClient:
         """
 
         return self.generate_video(prompt, image_url=image_url)
+
+    def get_video_task(self, task_id: str) -> Dict[str, Any]:
+        """
+        查询视频任务状态
+        """
+        try:
+            result = self.client.content_generation.tasks.get(task_id=task_id)
+            data = {}
+            # 对象转简易 dict
+            if hasattr(result, "__dict__"):
+                data = dict(result.__dict__)
+            data["status"] = getattr(result, "status", None)
+            data["task_id"] = task_id
+            data["data"] = getattr(result, "data", None)
+            return data
+        except Exception as e:
+            raise RuntimeError(f"查询视频任务失败: {e}")

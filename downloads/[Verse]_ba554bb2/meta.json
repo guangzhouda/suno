@@ -1,0 +1,22 @@
+{
+  "task_id": "ba554bb25309ab02b81efc7d637e057d",
+  "title": "[Verse]",
+  "style": "柔情",
+  "tracks": [
+    {
+      "title": "[Verse]",
+      "audio_id": "366ecf3b-8d33-42b4-b018-f81b33618fb6",
+      "audio_url": "https://musicfile.api.box/MzY2ZWNmM2ItOGQzMy00MmI0LWIwMTgtZjgxYjMzNjE4ZmI2.mp3",
+      "stream_audio_url": "https://musicfile.api.box/MzY2ZWNmM2ItOGQzMy00MmI0LWIwMTgtZjgxYjMzNjE4ZmI2",
+      "file": "downloads\\[Verse]_ba554bb2\\01_[Verse].mp3"
+    },
+    {
+      "title": "[Verse]",
+      "audio_id": "4edec492-cc25-4cc7-9788-a78cea58673a",
+      "audio_url": "https://musicfile.api.box/NGVkZWM0OTItY2MyNS00Y2M3LTk3ODgtYTc4Y2VhNTg2NzNh.mp3",
+      "stream_audio_url": "https://musicfile.api.box/NGVkZWM0OTItY2MyNS00Y2M3LTk3ODgtYTc4Y2VhNTg2NzNh",
+      "file": "downloads\\[Verse]_ba554bb2\\02_[Verse].mp3"
+    }
+  ],
+  "lyrics_file": "downloads\\[Verse]_ba554bb2\\lyrics.txt"
+}

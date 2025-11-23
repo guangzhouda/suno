@@ -1,0 +1,22 @@
+{
+  "time": "2025-11-22T17:26:00+08:00",
+  "purpose": "图片→歌词功能的关键疑问与优先级",
+  "known": [
+    "后端有 DoubaoClient.understand_image 但无直接生成歌词接口；前端 image_to_song 走描述→歌词的两段调用。",
+    "Suno 接口 /api/suno/generate 已支持 customMode=true 传入歌词和标题。"
+  ],
+  "unknown": [
+    {
+      "question": "歌词生成时是否需要固定段落格式/标记（如 Verse/Chorus），是否要返回标题？",
+      "priority": "high"
+    },
+    {
+      "question": "前端 image_to_song 模式下，用户输入是附加要求还是完全由图片生成？",
+      "priority": "high"
+    },
+    {
+      "question": "缺乏外网/密钥情况下如何验证——需要准备本地假响应或跳过？",
+      "priority": "medium"
+    }
+  ]
+}

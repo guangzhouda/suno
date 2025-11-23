@@ -1,26 +1,11 @@
 """
-API路由模块
+API 路由模块
+
+当前暴露 Suno 与 Doubao 路由，满足音乐生成与豆包多模态能力。
 """
 
-from loguru import logger
+from modules.routes import suno  # noqa: F401
+from modules.routes import doubao  # noqa: F401
+from modules.routes import upload  # noqa: F401
 
-__all__ = []
-
-
-def _import_router(module_name: str, attr: str, label: str):
-    try:
-        module = __import__(module_name, fromlist=[attr])
-        router = getattr(module, attr)
-        __all__.append(attr)
-        return router
-    except Exception as exc:
-        logger.warning(f"{label} 路由加载失败：{exc}")
-        return None
-
-
-llm_router = _import_router("modules.routes.llm", "router", "LLM")
-newapi_router = _import_router("modules.routes.newapi", "router", "NewAPI")
-music_workflow_router = _import_router("modules.routes.music_workflow", "router", "音乐创作工作流")
-suno_router = _import_router("modules.routes.suno", "router", "Suno")
-doubao_router = _import_router("modules.routes.doubao", "router", "Doubao")
-creative_workflow_router = _import_router("modules.routes.creative_workflow", "router", "创意工作流")
+__all__ = ["suno", "doubao", "upload"]

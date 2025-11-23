@@ -9,6 +9,8 @@ from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 import tempfile
 import pathlib
+import requests
+from pathlib import Path
 
 from modules.clients.suno import SunoClient
 from config import get_config
@@ -48,6 +50,14 @@ class CoverMusicRequest(BaseModel):
     title: Optional[str] = Field(None, description="新标题")
     callback: Optional[str] = Field(None, description="回调URL")
 
+class CoverFromSavedRequest(BaseModel):
+    """基于已保存歌曲文件发起翻唱"""
+    dir: str = Field(..., description="downloads 下的目录名或完整路径")
+    track_index: int = Field(0, description="使用第几个音轨，默认0")
+    prompt: Optional[str] = Field(None, description="歌词/提示")
+    style: Optional[str] = Field(None, description="目标风格")
+    title: Optional[str] = Field(None, description="新标题")
+
 
 class ExtendMusicRequest(BaseModel):
     """延长音乐请求"""
@@ -74,6 +84,31 @@ class LyricsRequest(BaseModel):
     prompt: str = Field(..., description="歌词创作提示")
     callback: Optional[str] = Field(None, description="回调URL")
 
+class SaveSongRequest(BaseModel):
+    """保存歌曲与歌词请求"""
+    task_id: str = Field(..., description="Suno 任务ID")
+    lyrics_text: Optional[str] = Field(None, description="歌词文本")
+    title: Optional[str] = Field(None, description="歌曲标题")
+    style: Optional[str] = Field(None, description="歌曲风格")
+
+
+def _safe_name(text: str) -> str:
+    """简易文件名清洗"""
+    bad = r'\\/:*?"<>|'
+    for ch in bad:
+        text = text.replace(ch, "_")
+    return text.strip() or "untitled"
+
+def _load_meta(dir_path: Path) -> Dict[str, Any]:
+    meta_file = dir_path / "meta.json"
+    if not meta_file.exists():
+        return {}
+    try:
+        import json
+        return json.loads(meta_file.read_text(encoding="utf-8", errors="ignore"))
+    except Exception:
+        return {}
+
 
 # ==================== API 端点 ====================
 
@@ -99,6 +134,7 @@ def normalize_suno_task(raw: Dict[str, Any]) -> Dict[str, Any]:
             continue
         tracks.append({
             "id": track.get("id"),
+            "audio_id": track.get("audioId") or track.get("audio_id"),
             "audio_url": track.get("audioUrl") or track.get("audio_url"),
             "stream_audio_url": track.get("streamAudioUrl") or track.get("stream_audio_url"),
             "image_url": track.get("imageUrl") or track.get("image_url"),
@@ -135,6 +171,89 @@ async def health_check():
         raise HTTPException(status_code=503, detail=str(e))
 
 
+@router.post("/save")
+async def save_song(request: SaveSongRequest):
+    """
+    保存歌曲音频与歌词到本地 downloads/{task_id}
+
+    - 自动获取 Suno 任务信息，下载 audio_url
+    - 将歌词写入 lyrics.txt
+    """
+    client = get_suno_client()
+    try:
+        raw = client.get_music_info(request.task_id)
+        info = normalize_suno_task(raw)
+        tracks = info.get("tracks", [])
+        if not tracks:
+            raise HTTPException(status_code=400, detail="任务无可下载音频")
+
+        # 以歌曲名作为目录名，避免任务ID命名
+        title_from_track = tracks[0].get("title") if tracks else None
+        title_final = request.title or title_from_track or f"song_{request.task_id[:6]}"
+        folder_name = _safe_name(title_final)
+        base_dir = Path("downloads") / folder_name
+        # 若同名目录已存在，附加任务ID前缀避免覆盖，但仍以歌名为前缀
+        if base_dir.exists() and base_dir.is_dir():
+            base_dir = Path("downloads") / f"{folder_name}_{request.task_id[:8]}"
+        base_dir.mkdir(parents=True, exist_ok=True)
+
+        saved_files = []
+        meta = {
+            "task_id": request.task_id,
+            "title": title_final,
+            "style": request.style,
+            "tracks": [],
+        }
+        for idx, t in enumerate(tracks, 1):
+            url = t.get("audio_url") or t.get("stream_audio_url")
+            if not url:
+                continue
+            resp = requests.get(url, timeout=300)
+            resp.raise_for_status()
+            fname = base_dir / f"{idx:02d}_{_safe_name(t.get('title') or 'track')}.mp3"
+            with open(fname, "wb") as f:
+                f.write(resp.content)
+            saved_files.append(str(fname))
+            meta["tracks"].append({
+                "title": t.get("title"),
+                "audio_id": t.get("audio_id") or t.get("id"),
+                "audio_url": url,
+                "stream_audio_url": t.get("stream_audio_url"),
+                "file": str(fname)
+            })
+
+        # 写歌词
+        if request.lyrics_text:
+            lyric_file = base_dir / "lyrics.txt"
+            with open(lyric_file, "w", encoding="utf-8") as f:
+                f.write(request.lyrics_text)
+            saved_files.append(str(lyric_file))
+            meta["lyrics_file"] = str(lyric_file)
+
+        # 写 meta
+        try:
+            meta_file = base_dir / "meta.json"
+            meta_file.write_text(
+                __import__("json").dumps(meta, ensure_ascii=False, indent=2),
+                encoding="utf-8"
+            )
+            saved_files.append(str(meta_file))
+        except Exception:
+            pass
+
+        return {
+            "code": 200,
+            "data": {
+                "saved": saved_files,
+                "dir": str(base_dir)
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/credits")
 async def get_credits():
     """获取剩余积分"""
@@ -149,6 +268,35 @@ async def get_credits():
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/saved")
+async def list_saved_songs():
+    """
+    列出 downloads 下保存的歌曲（基于 meta.json）
+    """
+    base = Path("downloads")
+    items = []
+    if not base.exists():
+        return {"code": 200, "data": []}
+    for folder in base.iterdir():
+        if not folder.is_dir():
+            continue
+        meta_file = folder / "meta.json"
+        if not meta_file.exists():
+            continue
+        try:
+            meta = __import__("json").loads(meta_file.read_text(encoding="utf-8", errors="ignore"))
+            items.append({
+                "dir": str(folder),
+                "task_id": meta.get("task_id"),
+                "title": meta.get("title") or folder.name,
+                "style": meta.get("style"),
+                "tracks": meta.get("tracks") or [],
+            })
+        except Exception:
+            continue
+    return {"code": 200, "data": items}
 
 
 # ==================== 音乐生成 ====================
@@ -231,6 +379,64 @@ async def cover_music(request: CoverMusicRequest):
         return {
             "code": 200,
             "message": "翻唱任务已提交",
+            "data": {
+                "task_id": task_id
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+class CoverFromSavedRequest(BaseModel):
+    """基于已保存歌曲文件发起翻唱"""
+    dir: str = Field(..., description="downloads 下的目录名或完整路径")
+    track_index: int = Field(0, description="使用第几个音轨，默认0")
+    prompt: Optional[str] = Field(None, description="歌词/提示")
+    style: Optional[str] = Field(None, description="目标风格")
+    title: Optional[str] = Field(None, description="新标题")
+
+
+@router.post("/cover-from-saved")
+async def cover_from_saved(request: CoverFromSavedRequest):
+    """
+    基于 downloads 下已保存的歌曲文件发起翻唱
+    """
+    base_dir = Path(request.dir)
+    if not base_dir.exists():
+        base_dir = Path("downloads") / request.dir
+    if not base_dir.exists():
+        raise HTTPException(status_code=404, detail=f"未找到目录: {request.dir}")
+
+    meta = _load_meta(base_dir)
+    tracks = meta.get("tracks") or []
+    if not tracks:
+        raise HTTPException(status_code=400, detail="目录中缺少 meta.json 或 tracks 为空")
+    idx = max(0, min(request.track_index, len(tracks) - 1))
+    track = tracks[idx]
+    file_path = Path(track.get("file") or "")
+    if not file_path.exists():
+        # 尝试目录下匹配 mp3
+        candidates = list(base_dir.glob("*.mp3"))
+        if not candidates:
+            raise HTTPException(status_code=404, detail="未找到可用的音频文件")
+        file_path = candidates[idx % len(candidates)]
+
+    client = get_suno_client()
+    try:
+        upload_url = client.upload_stream(str(file_path), upload_path="music", file_name=file_path.name)
+        task_id = client.upload_cover(
+            uploadUrl=upload_url,
+            customMode=True,
+            instrumental=False,
+            model="V5",
+            prompt=request.prompt,
+            style=request.style or meta.get("style") or "Pop",
+            title=request.title or meta.get("title") or file_path.stem,
+            callback=None
+        )
+        return {
+            "code": 200,
+            "message": "翻唱任务已提交（基于本地已保存歌曲）",
             "data": {
                 "task_id": task_id
             }

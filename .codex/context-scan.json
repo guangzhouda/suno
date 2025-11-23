@@ -1,80 +1,45 @@
 {
-  "scan_time": "2025-11-21T18:35:00+08:00",
-  "focus": "图片成歌失败 + 任务轮询 + 积分交互按钮",
+  "scan_time": "2025-11-22T17:25:00+08:00",
+  "focus": "豆包图片理解→歌词→Suno 生成音乐流程",
   "location": {
-    "entrypoints": ["ai_platform.py", "music_workflow_app.py"],
-    "image_to_song_workflow": [
-      "modules/routes/creative_workflow.py::_run_image_to_song_workflow",
-      "modules/routes/creative_workflow.py::create_image_to_song",
-      "modules/routes/creative_workflow.py::create_image_to_song_from_upload",
-      "modules/routes/doubao.py::image_to_song",
-      "modules/clients/doubao.py::image_to_song_description",
-      "modules/clients/suno.py::generate_music"
+    "primary_files": [
+      "modules/clients/doubao.py",
+      "modules/routes/doubao.py",
+      "maono.html"
     ],
-    "ui_surfaces": [
-      "templates/creative_ui_v2.html (支持图片URL+文件上传)",
-      "ai_platform.py 内嵌 fallback HTML",
-      "templates/creative_ui_enhanced.html"
-    ],
-    "task_polling_and_balance": [
-      "templates/creative_ui_v2.html::addTask/startPolling/checkTaskStatus",
-      "ai_platform.py::handleFormSubmit/credits",
-      "modules/routes/suno.py (任务状态查询、积分接口)"
-    ],
-    "related_docs": ["docs/MUSIC_WORKFLOW_V2_DESIGN.md", "MUSIC_WORKFLOW_GUIDE.md", "AI_PLATFORM_README.md"],
-    "tests": [
-      "test_music_workflow.py (requests 调用音乐工作流 API)",
-      "test_music_workflow_call_suno.py",
-      "test_clients.py (SunoClient/DoubaoClient 冒烟)",
-      "test_newapi_image.py / test_newapi_models.py"
+    "supporting": [
+      "tests/doubao_local_image_chat.py",
+      "tests/test_upload_and_vision.py",
+      "modules/clients/suno.py"
     ]
   },
   "current_state": {
-    "workflow": "图片成歌通过 Doubao Vision (image_to_song_description) 分析图片 → Doubao DeepSeek-V3 生成歌词 → SunoClient.generate_music 创建任务。上传接口将图片转换为 data URI 直接传给 Doubao。",
-    "ui": "creative_ui_v2.html 提供 URL 或文件上传入口，并在成功后通过 addTask() 将音乐任务加入前端 activeTasks Map，依赖每 5 秒调用 /api/suno/task/{task_id} 轮询，失败则只显示 `result.error` 文案。",
-    "similar_features": [
-      {
-        "name": "灵感写歌",
-        "path": "/api/creative/inspiration-song",
-        "difference": "只需文本灵感，不依赖图片或上传；流程 = Doubao 生成歌词 + Suno 生成音乐。"
-      },
-      {
-        "name": "AI 翻唱",
-        "path": "/api/creative/upload-cover",
-        "difference": "上传音频→Suno翻唱，占用同一任务列表和轮询逻辑。"
-      }
-    ],
-    "status": "Doubao/Suno API 调用缺乏细粒度错误包装，当 Doubao Vision 无法解析 data URI 或模型异常时会抛 RuntimeError 导致 HTTP 500，UI 仅展示“创作失败”。任务列表仅在成功创建 Suno Task ID 后记录，若 Doubao 步骤失败则不会出现任何任务条目。"
+    "backend": "modules/clients/doubao.py 提供 chat/understand_image/image_to_song_description 等；modules/routes/doubao.py 暴露 /api/doubao/image/understand 与 /api/doubao/lyrics（文本提示），缺少图片直出歌词接口。",
+    "frontend": "maono.html 的 image_to_song 模式：先调用 /api/doubao/image/understand 获取描述，再用 /api/doubao/lyrics 或 Suno 生成歌词，最后把歌词交给 /api/suno/generate。",
+    "tests": "tests/doubao_local_image_chat.py 用 OpenAI 兼容接口发送本地 imag.png 测试视觉描述；tests/test_upload_and_vision.py 先上传到 Suno 再走 DoubaoClient.understand_image。",
+    "gap": "缺少图片→歌词的直接接口和前端调用，当前需要描述→再生成歌词的两段式流程。"
   },
   "tech_stack": {
-    "backend": "Python 3 + FastAPI + Pydantic 路由 (modules/routes/*)",
-    "clients": [
-      "modules/clients/doubao.py 使用 volcenginesdkarkruntime 调用 doubao-seed-1-6-vision-250815 等模型",
-      "modules/clients/suno.py 通过 requests 调 Suno REST (generate/music/task/credits)"
+    "language": "Python + FastAPI 后端，HTML+原生 JS 前端",
+    "apis": [
+      "volcenginesdkarkruntime.Ark chat.completions",
+      "Suno API (generate/lyrics/upload)"
     ],
-    "frontend": "原生 HTML/CSS/JS 模板 (creative_ui_v2/enhanced) + ai_platform.py fallback",
-    "storage": "临时文件+本地 outputs/ 目录，无持久数据库"
+    "data_flow": "图片 URL → doubao vision 描述 → doubao/suno 文本生成歌词 → /api/suno/generate 输出音频"
   },
   "tests": {
-    "coverage": "仅提供 requests 风格脚本和 pytest 脚本调用真实接口，未针对图片成歌或任务轮询做单测。",
-    "manual_steps": [
-      "python test_music_workflow.py          # 调 /api/music-workflow/*",
-      "pytest test_clients.py                 # 检查 Suno/Doubao 客户端",
-      "python test_music_workflow_call_suno.py (需有效 Suno Token)"
+    "existing": [
+      "manual run python tests/doubao_local_image_chat.py",
+      "tests/test_upload_and_vision.py （需要外网与密钥）"
+    ],
+    "needed": [
+      "新增图片→歌词接口返回结构单测/冒烟（可用本地假数据）",
+      "前端 image_to_song 调用新接口的集成验证"
     ]
   },
   "observations": [
-    {
-      "item": "image_to_song_description 直接把 data URI 传给 Doubao Vision，若豆包不支持 data: scheme（文档要求公网 URL 或 Ark 媒体 ID），上传图片会立即失败，表现为“创作失败”。需考虑改成先上传到 Suno/CDN 或使用 Doubao 提供的媒体上传接口。"
-    },
-    {
-      "item": "图片成歌工作流中 Doubao -> Suno 任何一步抛出异常都会被 FastAPI 捕获成 500，前端 result.innerHTML 显示 JSON 错误，但 activeTasks 未添加记录，用户感觉“只有音乐任务空白且没有进度”。"
-    },
-    {
-      "item": "任务轮询逻辑依赖 addTask() 在成功创建 Suno 任务后添加条目，目前没有后端或本地存储，刷新页面或 Doubao 阶段失败都会导致任务列表为空，同时没有任何“查询中”提示。"
-    },
-    {
-      "item": "积分展示仅在 loadCredits() / 任务完成后更新，没有“刷新”按钮或自动刷新间隔，导致用户希望新增按钮以主动刷新。"
-    }
+    {"item": "API Key 读取：config.json.doubao.api_key 或环境变量 ARK_API_KEY；测试脚本硬编码了 key。"},
+    {"item": "vision 模型默认 doubao-seed-1-6-vision-250815；文本模型 deepseek-v3-250324。"},
+    {"item": "前端已支持歌词展示与保存，缺少图片直出歌词的调用口。"}
   ]
 }

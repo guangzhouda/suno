@@ -1,0 +1,22 @@
+{
+  "task_id": "c86650c3804d87ce90dea15423e084db",
+  "title": "废墟上的猫耳诗",
+  "style": "柔和",
+  "tracks": [
+    {
+      "title": "废墟上的猫耳诗",
+      "audio_id": "0064afb3-d150-4bea-9813-f92e6c03d581",
+      "audio_url": "https://musicfile.api.box/MDA2NGFmYjMtZDE1MC00YmVhLTk4MTMtZjkyZTZjMDNkNTgx.mp3",
+      "stream_audio_url": "https://musicfile.api.box/MDA2NGFmYjMtZDE1MC00YmVhLTk4MTMtZjkyZTZjMDNkNTgx",
+      "file": "downloads\\废墟上的猫耳诗_c86650c3\\01_废墟上的猫耳诗.mp3"
+    },
+    {
+      "title": "废墟上的猫耳诗",
+      "audio_id": "1955e876-e336-4f5d-aa11-d51f0fb25550",
+      "audio_url": "https://musicfile.api.box/MTk1NWU4NzYtZTMzNi00ZjVkLWFhMTEtZDUxZjBmYjI1NTUw.mp3",
+      "stream_audio_url": "https://musicfile.api.box/MTk1NWU4NzYtZTMzNi00ZjVkLWFhMTEtZDUxZjBmYjI1NTUw",
+      "file": "downloads\\废墟上的猫耳诗_c86650c3\\02_废墟上的猫耳诗.mp3"
+    }
+  ],
+  "lyrics_file": "downloads\\废墟上的猫耳诗_c86650c3\\lyrics.txt"
+}

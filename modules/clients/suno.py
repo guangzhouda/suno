@@ -23,15 +23,16 @@ class SunoClient:
     """Suno API 客户端"""
 
     def __init__(self, api_key: Optional[str] = None, api_base: Optional[str] = None):
+        # 先初始化，避免后续属性访问报缺失
+        self.api_key = api_key
+
         # 优先级：参数 > 配置文件 > 环境变量
-        if api_key:
-            self.api_key = api_key
-        else:
+        if not self.api_key:
             # 尝试从 config.json 读取
             config_file = pathlib.Path("config.json")
             if config_file.exists():
                 try:
-                    with open(config_file, encoding="utf-8") as f:
+                    with open(config_file, encoding="utf-8-sig") as f:  # 兼容 BOM
                         config = json.load(f)
                         suno_config = config.get("suno", {})
                         self.api_key = suno_config.get("api_key")
@@ -240,17 +241,6 @@ class SunoClient:
     # ==================== 文件上传 ====================
 
     def upload_stream(self, file_path: str, upload_path: str = "music", file_name: Optional[str] = None) -> str:
-        """
-        上传本地文件（流式）
-
-        Args:
-            file_path: 本地文件路径
-            upload_path: 上传路径分类
-            file_name: 文件名（可选，默认使用原文件名）
-
-        Returns:
-            上传后的文件URL
-        """
         if not file_name:
             file_name = pathlib.Path(file_path).name
 
@@ -272,20 +262,46 @@ class SunoClient:
         if result.get("code") != 200:
             raise RuntimeError(result.get("msg", "上传失败"))
 
-        return result["data"]["url"]
+        data = result.get("data") or {}
+        # Suno 官方字段名：downloadUrl
+        url = data.get("downloadUrl")
+        if not url:
+            raise RuntimeError(f"上传成功但返回中缺少 downloadUrl 字段: {result}")
+
+        return url
+
+    def upload_fileobj(self, fileobj, upload_path: str = "music", file_name: Optional[str] = None) -> str:
+        """
+        直接上传文件对象，返回公网 URL（给豆包图片理解用）
+        """
+        if not file_name:
+            file_name = getattr(fileobj, "name", "upload.bin")
+
+        files = {"file": (file_name, fileobj)}
+        data = {"uploadPath": upload_path, "fileName": file_name}
+        headers = {"Authorization": f"Bearer {self.api_key}"}
+
+        r = requests.post(
+            f"{self.upload_base}/file-stream-upload",
+            headers=headers,
+            files=files,
+            data=data,
+            timeout=300
+        )
+        r.raise_for_status()
+        result = r.json()
+
+        if result.get("code") != 200:
+            raise RuntimeError(result.get("msg", "上传失败"))
+
+        data = result.get("data") or {}
+        url = data.get("downloadUrl")
+        if not url:
+            raise RuntimeError(f"上传成功但返回中缺少 downloadUrl 字段: {result}")
+
+        return url
 
     def upload_from_url(self, file_url: str, upload_path: str = "music", file_name: Optional[str] = None) -> str:
-        """
-        从URL上传文件
-
-        Args:
-            file_url: 文件URL
-            upload_path: 上传路径分类
-            file_name: 文件名（可选）
-
-        Returns:
-            上传后的文件URL
-        """
         if not file_name:
             file_name = pathlib.Path(file_url).name
 
@@ -308,7 +324,12 @@ class SunoClient:
         if result.get("code") != 200:
             raise RuntimeError(result.get("msg", "上传失败"))
 
-        return result["data"]["url"]
+        data = result.get("data") or {}
+        url = data.get("downloadUrl")
+        if not url:
+            raise RuntimeError(f"上传成功但返回中缺少 downloadUrl 字段: {result}")
+
+        return url
 
     # ==================== 延长音乐 ====================
 

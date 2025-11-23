@@ -1,0 +1,22 @@
+{
+  "task_id": "f50b11eeaab8dccc2e633752bd24e2c2",
+  "title": "AI Song",
+  "style": "pop",
+  "tracks": [
+    {
+      "title": "AI Song",
+      "audio_id": "bf759e88-29f2-404d-bba1-0d19032a6372",
+      "audio_url": "https://musicfile.api.box/YmY3NTllODgtMjlmMi00MDRkLWJiYTEtMGQxOTAzMmE2Mzcy.mp3",
+      "stream_audio_url": "https://musicfile.api.box/YmY3NTllODgtMjlmMi00MDRkLWJiYTEtMGQxOTAzMmE2Mzcy",
+      "file": "downloads\\AI Song_f50b11ee\\01_AI Song.mp3"
+    },
+    {
+      "title": "AI Song",
+      "audio_id": "5a3fde0e-c3ce-4545-b69f-642117cbb946",
+      "audio_url": "https://musicfile.api.box/NWEzZmRlMGUtYzNjZS00NTQ1LWI2OWYtNjQyMTE3Y2JiOTQ2.mp3",
+      "stream_audio_url": "https://musicfile.api.box/NWEzZmRlMGUtYzNjZS00NTQ1LWI2OWYtNjQyMTE3Y2JiOTQ2",
+      "file": "downloads\\AI Song_f50b11ee\\02_AI Song.mp3"
+    }
+  ],
+  "lyrics_file": "downloads\\AI Song_f50b11ee\\lyrics.txt"
+}

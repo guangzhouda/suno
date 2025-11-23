@@ -1,0 +1,15 @@
+{
+  "request_time": "2025-11-22T10:54:21+08:00",
+  "requester": "user",
+  "task": "整理项目根目录，仅保留 docs 与 modules 及必要元信息，其余移入 .history 作为历史垃圾箱。",
+  "constraints": [
+    "遵循 AGENTS.md 工作流程与文件产出要求",
+    "保持 .git/.codex/AGENTS.md 等元数据可用",
+    "移动而非删除，历史内容放入 .history"
+  ],
+  "acceptance": [
+    "根目录仅包含 docs、modules、.history 及必要元信息",
+    "非核心文件已完整移入 .history 并保持相对路径",
+    "操作记录写入 .codex/operations-log.md"
+  ]
+}

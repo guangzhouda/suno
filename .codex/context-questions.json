@@ -1,29 +1,29 @@
 {
+  "generated_at": "2025-11-22T10:55:20+08:00",
+  "knowns": [
+    "需保留 docs/ 与 modules/ 作为主干内容",
+    "创建 .history 作为垃圾箱，移动其他文件/目录",
+    "需保留 AGENTS.md、.git、.codex 等元信息"
+  ],
   "questions": [
     {
-      "id": "Q1",
+      "question": "哪些文件视为“相关”需要保留在根目录？",
       "priority": "high",
-      "question": "灵感成歌/完整创作的 Suno 任务如何查询并返回可播放音频？当前 music_workflow.call_suno_generate_music 是空实现，creative_workflow 只返回 task_id，UI 需要哪些数据？"
+      "notes": "默认保留元数据（AGENTS.md/.git/.codex/.gitignore），其余移动。",
+      "resolution": "保留 docs、modules、.git、.codex、AGENTS.md、.gitignore，其他全部移入 .history。"
     },
     {
-      "id": "Q2",
-      "priority": "high",
-      "question": "图片成歌流程中 Doubao 图像理解/歌词生成是否返回期望 JSON？当用户上传图片时为何直接报错（需确认输入校验、DoubaoClient.image_to_song_description 解析失败处理）？"
-    },
-    {
-      "id": "Q3",
-      "priority": "high",
-      "question": "AI 翻唱端点（/api/creative/cover-workflow、/upload-cover）与 docs/suno-API-docs 规范是否一致？是否缺少必需字段或错误处理，导致 API 请求失败？"
-    },
-    {
-      "id": "Q4",
+      "question": "移动策略是否需要保留原相对路径或创建子目录？",
       "priority": "medium",
-      "question": "完整创作流 full_creative_workflow 中歌词/音乐/封面/MV 顺序调用是否捕获异常？哪个步骤导致“创作失败”提示？是否与 Doubao/Suno Client 的异常暴露有关？"
+      "notes": "简化处理：在 .history 下直接放置原顶层文件/目录，保持名称不变。",
+      "resolution": "按原始名称移动到 .history，不做额外嵌套。"
     },
     {
-      "id": "Q5",
+      "question": "移动后是否需更新文档/日志记录？",
       "priority": "medium",
-      "question": "创建音乐任务后余额未更新：哪里负责刷新 Suno credits？SunoClient.get_credits 是否被调用/缓存？需要新增事件或轮询？"
+      "notes": "AGENTS 要求写入 operations-log.md。",
+      "resolution": "在 .codex/operations-log.md 追加操作记录。"
     }
-  ]
+  ],
+  "status": "ready"
 }

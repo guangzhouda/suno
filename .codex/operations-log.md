@@ -20,3 +20,21 @@
 - 2025-11-21T18:42+08:00 planning: 通过 shrimp plan/analyze/reflect/split 拆解 3 个任务（上传修复、任务刷新、积分按钮）。
 - 2025-11-21T18:50+08:00 coding: 实现 Task 1-3——后端上传改用 SunoClient.upload_stream 并返回公网 URL；creative_ui_v2 增加任务手动刷新/最近轮询与积分刷新按钮。
 - 2025-11-21T18:55+08:00 testing: 运行 `python -m pytest test_suno_task_normalize.py`，全部通过（警告同前），结果写入 .codex/testing.md。
+- 2025-11-22T10:54+08:00 sequential-thinking (tool-unavailable): 工具缺失，手动完成思考与规划，目标为根目录清理与历史归档。
+- 2025-11-22T10:55+08:00 docs: 创建 .codex/structured-request.json，重写 context-scan/context-questions/context-sufficiency 以适配目录整理任务。
+- 2025-11-22T10:56+08:00 shell (elevated): 新建 .history 目录作为垃圾箱。
+- 2025-11-22T11:04+08:00 shell (elevated): 将除 docs/modules/.git/.codex/AGENTS.md/.gitignore/.history 外的顶层文件与目录整体移入 .history。
+- 2025-11-22T11:06+08:00 verify: 列出根目录与 .history 内容，确认保留项与归档项符合预期。
+- 2025-11-22T17:12+08:00 shell: 阅读 tests/doubao_local_image_chat.py、modules/clients/doubao_vision.py，确认本地图片通过 base64 data URL 发送到 vision chat。
+- 2025-11-22T17:15+08:00 shell: 尝试运行 python tests/doubao_local_image_chat.py（系统 Python 缺少 openai），改用 .venv\\Scripts\\python 运行但远程调用超时未返回（疑似网络受限）；记录当前无法完成实网调用。
+- 2025-11-22T17:25+08:00 sequential-thinking: 重新梳理图片→歌词→Suno 需求，定位后端/前端缺口。
+- 2025-11-22T17:26+08:00 docs: 更新 .codex/context-scan.json、context-question-6.json、context-sufficiency.md，聚焦图片直出歌词接口与前端调用。
+- 2025-11-22T17:35+08:00 coding: modules/clients/doubao.py 新增 image_to_lyrics，路由 /api/doubao/image/lyrics 返回标题+歌词+描述。
+- 2025-11-22T17:50+08:00 coding: maono.html image_to_song 模式接入新接口，优先图片直出歌词，失败回退描述+文本生成；保留歌词展示与 Suno 生成流程。
+- 2025-11-22T17:52+08:00 note: 生成 patch_script.py 用于文本替换，删除时遇权限拒绝需后续手动清理。
+- 2025-11-22T18:45+08:00 coding: 前端新增本地图片上传按钮，后端挂载 /api/upload/image 并实现 SunoClient.upload_fileobj 支持文件直传；main.py 挂载上传路由。
+- 2025-11-22T19:05+08:00 ui: 左侧表单按模式拆分（灵感成歌/图片成歌/续写/翻唱），提交逻辑改为按模式读取字段；图片上传按钮复用 image_to_song 流程。git status 因 safe.directory 权限未能执行。
+- 2025-11-22T19:25+08:00 ui: 右侧布局调整，歌词与图片并排，图片网格增大；续写/翻唱支持选择已保存歌曲。
+- 2025-11-22T19:25+08:00 backend: Suno meta 保存 tracks（含 audio_id/audio_url）到 downloads/meta.json，新增 /api/suno/saved 列表；normalize_suno_task 加入 audio_id。
+- 2025-11-22T20:05+08:00 backend: 保存歌曲时标题为空会以 track 标题或 song_{taskId} 命名目录；新增 /api/suno/cover-from-saved 支持用本地 mp3 重新上传再翻唱；目录 meta 解析辅助函数。
+- 2025-11-22T20:05+08:00 ui: 翻唱表单支持无 URL 时用已保存歌曲触发 cover-from-saved，默认用选中曲目的标题/风格；新增翻唱说明提示；保存成功后刷新已保存列表。
